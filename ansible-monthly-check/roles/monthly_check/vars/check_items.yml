@@ -1,0 +1,368 @@
+﻿---
+check_items:
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.1 노드 운영체제 상태"
+    title: "1.1.1 CPU 점검"
+    command: "top -bn1 | grep -m1 '%Cpu(s)'"
+    targets: ["openstack-control", "openstack-compute"]
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.1 노드 운영체제 상태"
+    title: "1.1.2 메모리 점검"
+    command: "free -g"
+    targets: ["openstack-control", "openstack-compute"]
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.1 노드 운영체제 상태"
+    title: "1.1.3 파일시스템 점검"
+    command: >-
+      df -hT | awk 'NR>1 {
+      fs=$1; p=$7; u=$6; gsub(/%/,"",u);
+      if (fs ~ /^\/dev\/loop/) next;
+      if (p ~ /(containerd|docker|kubelet|pods|overlay|shm|run\/containers|snap|\/var\/lib\/containers)/) next;
+      if (u+0 >= 80) print p, u"%"
+      }'
+    targets: ["openstack-control", "openstack-compute"]
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.1 노드 운영체제 상태"
+    title: "1.1.4 시간 동기화 점검"
+    command: "chronyc sources"
+    targets: ["openstack-control", "openstack-compute"]
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.2 미들웨어 구성요소 상태"
+    title: "1.2.1 HAProxy 점검"
+    command: "systemctl is-active haproxy; haproxy -c -f /etc/haproxy/haproxy.cfg 2>&1 | grep -Eo 'Configuration file is (valid|invalid)' || echo 'Configuration file invalid_or_check_failed'"
+    targets: ["openstack-control"]
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.2 미들웨어 구성요소 상태"
+    title: "1.2.2 PCSD 점검"
+    command: >-
+      systemctl is-active pcsd;
+      pcs status 2>/dev/null | egrep -i 'Current DC|Online:|OFFLINE|Failed|Stopped|error|warning' || true;
+      pcs quorum status 2>/dev/null | egrep -i 'Quorate|Expected votes|Total votes|error|warning' || true
+    targets: ["openstack-control"]
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.2 미들웨어 구성요소 상태"
+    title: "1.2.3 Pacemaker 점검"
+    command: "systemctl is-active pacemaker"
+    targets: ["openstack-control"]
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.2 미들웨어 구성요소 상태"
+    title: "1.2.4 Corosync 점검"
+    command: "systemctl is-active corosync; corosync-cfgtool -s 2>/dev/null | egrep -i 'ring|status|faulty|fail|error' || true"
+    targets: ["openstack-control"]
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.2 미들웨어 구성요소 상태"
+    title: "1.2.5 RabbitMQ 점검"
+    command: "systemctl is-active rabbitmq-server; rabbitmqctl cluster_status 2>/dev/null | egrep -i 'alarms|partitions|running_nodes|disc|error' || true"
+    targets: ["openstack-control"]
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.2 미들웨어 구성요소 상태"
+    title: "1.2.6 Memcached 점검"
+    command: "systemctl is-active memcached"
+    targets: ["openstack-control"]
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.2 미들웨어 구성요소 상태"
+    title: "1.2.7 HTTPD 점검"
+    command: "systemctl is-active httpd"
+    targets: ["openstack-control"]
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.2 미들웨어 구성요소 상태"
+    title: "1.2.8 PerconaDB 점검"
+    command: >-
+      s1=$(systemctl is-active mysqld 2>/dev/null || true);
+      s2=$(systemctl is-active mysql@bootstrap 2>/dev/null || true);
+      echo "mysqld: $s1";
+      echo "mysql@bootstrap: $s2";
+      if [[ "$s1" == "active" || "$s2" == "active" ]]; then
+      echo "RESULT: OK (one is active)";
+      else
+      echo "RESULT: FAIL (both inactive)";
+      fi;
+      # MYSQL_CMD_1: mysql -pxxx -e "SHOW STATUS LIKE 'wsrep_cluster_size';"
+      # MYSQL_CMD_2: mysql -pxxx -e "SHOW STATUS LIKE 'wsrep_ready';"
+      # 아래 두 줄에 실제 mysql 명령어를 넣어 사용하세요.
+      # <PUT_MYSQL_CMD_1_HERE>
+      # <PUT_MYSQL_CMD_2_HERE>
+    targets: ["openstack-control"]
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.2 미들웨어 구성요소 상태"
+    title: "1.2.9 Open vSwitch 점검"
+    command: "systemctl is-active openvswitch"
+    targets: ["openstack-control", "openstack-compute"]
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.3 클러스터 운영 상태"
+    title: "1.3.1 CPU 및 메모리 여유 용량 점검"
+    command: ". admin-openrc && openstack hypervisor list --long -f value -c 'Hypervisor Hostname' -c State -c Status -c vCPUs -c 'Memory MB' | awk '$2!=\"up\" || $3!=\"enabled\"'"
+    targets: ["openstack-control-01"]
+    primary_of: "openstack-control-01"
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.3 클러스터 운영 상태"
+    title: "1.3.2 주요 서비스 상태 점검"
+    command: >-
+      . admin-openrc;
+      openstack compute service list -f value -c Binary -c Host -c Zone -c Status -c State | awk '$4!="enabled" || $5!="up"';
+      openstack volume service list -f value -c Binary -c Host -c Zone -c Status -c State | awk '$4!="enabled" || $5!="up"';
+      openstack network agent list -f value -c 'Agent Type' -c Host -c Alive -c State | awk '$3!=":-)" || toupper($4)!="UP"'
+    targets: ["openstack-control-01"]
+    primary_of: "openstack-control-01"
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.3 클러스터 운영 상태"
+    title: "1.3.3 볼륨 상태 점검"
+    command: ". admin-openrc && openstack volume list --project K8S_PaaS -f value -c ID -c Name -c Status | awk '$3!=\"available\" && $3!=\"in-use\"'"
+    targets: ["openstack-control-01"]
+    primary_of: "openstack-control-01"
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.3 클러스터 운영 상태"
+    title: "1.3.4 OS 이미지 점검"
+    command: >-
+      . admin-openrc;
+      openstack volume list --project service -f value -c ID -c Name -c Status | awk '$3!="available" && $3!="in-use"';
+      openstack image list -f value -c ID -c Name -c Status | awk 'tolower($3)!="active"'
+    targets: ["openstack-control-01"]
+    primary_of: "openstack-control-01"
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.3 클러스터 운영 상태"
+    title: "1.3.5 불필요 네트워크 포트 점검"
+    command: ". admin-openrc && openstack port list -f value -c ID -c Name -c Status | awk 'toupper($3)!=\"ACTIVE\"'"
+    targets: ["openstack-control-01"]
+    primary_of: "openstack-control-01"
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.3 클러스터 운영 상태"
+    title: "1.3.6 하이퍼바이저 상태 점검"
+    command: ". admin-openrc && openstack hypervisor list -f value -c 'Hypervisor Hostname' -c State -c Status | awk '$2!=\"up\" || $3!=\"enabled\"'"
+    targets: ["openstack-control-01"]
+    primary_of: "openstack-control-01"
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.4 프로세스 점검"
+    title: "1.4.1 Control 노드 프로세스 점검"
+    command: >-
+      for s in haproxy pcsd pacemaker corosync rabbitmq-server memcached httpd openvswitch
+      openstack-nova-api openstack-cinder-api openstack-cinder-backup openstack-cinder-scheduler openstack-cinder-volume
+      openstack-glance-api openstack-nova-conductor openstack-nova-metadata-api openstack-nova-novncproxy openstack-nova-scheduler
+      neutron-metadata-agent neutron-openvswitch-agent neutron-server; do
+      st=$(systemctl is-active "$s" 2>/dev/null || echo not-found);
+      [ "$st" = "active" ] || echo "$s $st";
+      done;
+      s1=$(systemctl is-active mysqld 2>/dev/null || true);
+      s2=$(systemctl is-active mysql@bootstrap 2>/dev/null || true);
+      if [[ "$s1" != "active" && "$s2" != "active" ]]; then
+      echo "mysql-service inactive (mysqld=$s1 mysql@bootstrap=$s2)";
+      fi
+    targets: ["openstack-control"]
+
+  - section: "1. OpenStack 플랫폼 점검"
+    subsection: "1.4 프로세스 점검"
+    title: "1.4.2 Compute 노드 프로세스 점검"
+    command: >-
+      for s in openstack-nova-compute neutron-openvswitch-agent libvirtd openvswitch; do
+      st=$(systemctl is-active "$s" 2>/dev/null || echo not-found);
+      [ "$st" = "active" ] || echo "$s $st";
+      done
+    targets: ["openstack-compute"]
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.1 노드 운영체제 상태"
+    title: "2.1.1 CPU 점검"
+    command: "top -bn1 | grep -m1 '%Cpu(s)'"
+    targets: ["kubernetes-master", "kubernetes-worker"]
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.1 노드 운영체제 상태"
+    title: "2.1.2 메모리 점검"
+    command: "free -g"
+    targets: ["kubernetes-master", "kubernetes-worker"]
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.1 노드 운영체제 상태"
+    title: "2.1.3 파일시스템 점검"
+    command: >-
+      df -hT | awk 'NR>1 {
+      fs=$1; p=$7; u=$6; gsub(/%/,"",u);
+      if (fs ~ /^\/dev\/loop/) next;
+      if (p ~ /(containerd|docker|kubelet|pods|overlay|shm|run\/containers|snap|\/var\/lib\/containers)/) next;
+      if (u+0 >= 80) print p, u"%"
+      }'
+    targets: ["kubernetes-master", "kubernetes-worker"]
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.1 노드 운영체제 상태"
+    title: "2.1.4 시간 동기화 점검"
+    command: "chronyc sources"
+    targets: ["kubernetes-master", "kubernetes-worker"]
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.2 클러스터 제어면 및 핵심 구성요소"
+    title: "2.2.1 클러스터별 상태 점검"
+    command: "kubectl cluster-info"
+    targets: ["kubernetes-master-01"]
+    primary_of: "kubernetes-master-01"
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.2 클러스터 제어면 및 핵심 구성요소"
+    title: "2.2.2 kube-apiserver 점검"
+    command: "kubectl get pods -n kube-system -l component=kube-apiserver --no-headers | awk '{split($2,a,\"/\"); if($4!=\"Running\" || a[1]!=a[2]) print $0}'"
+    targets: ["kubernetes-master-01"]
+    primary_of: "kubernetes-master-01"
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.2 클러스터 제어면 및 핵심 구성요소"
+    title: "2.2.3 kube-controller-manager 점검"
+    command: "kubectl get pods -n kube-system -l component=kube-controller-manager --no-headers | awk '{split($2,a,\"/\"); if($4!=\"Running\" || a[1]!=a[2]) print $0}'"
+    targets: ["kubernetes-master-01"]
+    primary_of: "kubernetes-master-01"
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.2 클러스터 제어면 및 핵심 구성요소"
+    title: "2.2.4 kube-scheduler 점검"
+    command: "kubectl get pods -n kube-system -l component=kube-scheduler --no-headers | awk '{split($2,a,\"/\"); if($4!=\"Running\" || a[1]!=a[2]) print $0}'"
+    targets: ["kubernetes-master-01"]
+    primary_of: "kubernetes-master-01"
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.2 클러스터 제어면 및 핵심 구성요소"
+    title: "2.2.5 kubelet 점검"
+    command: "kubectl get nodes --no-headers | awk '$2 !~ /^Ready(,|$)/'"
+    targets: ["kubernetes-master-01"]
+    primary_of: "kubernetes-master-01"
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.2 클러스터 제어면 및 핵심 구성요소"
+    title: "2.2.6 etcd 점검"
+    command: "true"
+    targets: ["kubernetes-master-01"]
+    primary_of: "kubernetes-master-01"
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.2 클러스터 제어면 및 핵심 구성요소"
+    title: "2.2.7 리소스 여유량 점검"
+    command: "kubectl top nodes --no-headers | awk '{cpu=$3; mem=$5; gsub(/%/,\"\",cpu); gsub(/%/,\"\",mem); if (cpu+0>=80 || mem+0>=80) print $0}'"
+    targets: ["kubernetes-master-01"]
+    primary_of: "kubernetes-master-01"
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.2 클러스터 제어면 및 핵심 구성요소"
+    title: "2.2.8 발생 이벤트 점검"
+    command: "kubectl get events -A --field-selector type!=Normal --sort-by='.lastTimestamp' | tail -n 10"
+    targets: ["kubernetes-master-01"]
+    primary_of: "kubernetes-master-01"
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.3 워크로드 및 스토리지 상태"
+    title: "2.3.1 Pod 상태 점검"
+    command: "kubectl get pods -A --no-headers | awk '$4!=\"Running\" && $4!=\"Completed\"'"
+    targets: ["kubernetes-master-01"]
+    primary_of: "kubernetes-master-01"
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.3 워크로드 및 스토리지 상태"
+    title: "2.3.2 DaemonSet/StatefulSet/Deployment/Job 상태 점검"
+    command: >-
+      kubectl get pods -A --no-headers | awk '$4!="Running" && $4!="Completed"';
+      kubectl get deploy -A -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,READY:.status.readyReplicas,DESIRED:.spec.replicas' --no-headers | awk '$3!=$4';
+      kubectl get sts -A -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,READY:.status.readyReplicas,DESIRED:.spec.replicas' --no-headers | awk '$3!=$4';
+      kubectl get ds -A -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,READY:.status.numberReady,DESIRED:.status.desiredNumberScheduled' --no-headers | awk '$3!=$4';
+      kubectl get job -A -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,SUCCEEDED:.status.succeeded,COMPLETIONS:.spec.completions' --no-headers | awk '$3!=$4'
+    targets: ["kubernetes-master-01"]
+    primary_of: "kubernetes-master-01"
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.3 워크로드 및 스토리지 상태"
+    title: "2.3.3 PV/PVC 상태 점검"
+    command: >-
+      kubectl get pv -o custom-columns='NAME:.metadata.name,STATUS:.status.phase,AGE:.metadata.creationTimestamp' --no-headers | awk '$2!="Bound"';
+      kubectl get pvc -A -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,STATUS:.status.phase,AGE:.metadata.creationTimestamp' --no-headers | awk '$3!="Bound"'
+    targets: ["kubernetes-master-01"]
+    primary_of: "kubernetes-master-01"
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.4 관리 플랫폼 점검"
+    title: "2.4.1 Rancher 상태 점검"
+    command: "kubectl get pods -n cattle-system -l app=rancher"
+    hosts: ["nbocpsltmn01"]
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.4 관리 플랫폼 점검"
+    title: "2.4.2 Nexus 상태 점검"
+    command: >-
+      podman ps -a --filter 'name=nexus';
+      podman stats --no-stream nexus;
+      podman exec nexus df -h /nexus-data;
+      podman exec nexus grep 'ERROR' /nexus-data/log/nexus.log || true
+    targets: ["nexus-mgmt"]
+
+  - section: "2. Kubernetes 플랫폼 점검"
+    subsection: "2.4 관리 플랫폼 점검"
+    title: "2.4.2 Nexus 상태 점검"
+    command: >-
+      kubectl get pod -n nexus -l app.kubernetes.io/instance=nexus --no-headers | awk '$3!="Running"';
+      kubectl top pod -n nexus -l app.kubernetes.io/instance=nexus;
+      for pod in $(kubectl get pods -n nexus -l app.kubernetes.io/instance=nexus --field-selector=status.phase!=Running -o name); do
+      echo '------------------------------------------------------------'; echo "Pod Name: $pod"; kubectl describe $pod -n nexus | tail -n 20; done;
+      kubectl get pvc -n nexus -l app.kubernetes.io/instance=nexus;
+      for pod in $(kubectl get pods -n nexus -l app.kubernetes.io/instance=nexus --field-selector=status.phase!=Running -o name); do
+      echo "[Pod: $pod]"; kubectl exec -n nexus $pod -- df -h /nexus-data | grep -v Filesystem; done;
+      kubectl get svc,ing,ep -n nexus -l app.kubernetes.io/instance=nexus
+    hosts: ["nbocpslomn01", "nbocpslomn21"]
+
+  - section: "3. 공통 보안 및 운영 점검"
+    subsection: "3.1 인증서 만료일 점검"
+    title: "3.1.1 OpenStack 인증서 만료일 점검 (/opt/certificate)"
+    command: "find /opt/certificate -maxdepth 3 -type f | sort | while read -r f; do echo \"[FILE] $f\"; openssl x509 -in \"$f\" -noout -enddate 2>/dev/null || echo 'NOT_X509_OR_UNREADABLE'; done"
+    targets: ["openstack-control"]
+
+  - section: "3. 공통 보안 및 운영 점검"
+    subsection: "3.1 인증서 만료일 점검"
+    title: "3.1.1 OpenStack 인증서 만료일 점검 (containerd root cert)"
+    command: "for f in /run/containerd/io.containerd.runtime.v2.task/k8s.io/bff192fb446459ad7889464197917cbe285716bacaa318b02950e9e44f0fa89b/rootfs/opt/certificate/ca/root.crt /run/containerd/io.containerd.runtime.v2.task/k8s.io/bff192fb446459ad7889464197917cbe285716bacaa318b02950e9e44f0fa89b/rootfs/opt/certificate/ca/root_ex.crt; do echo \"[FILE] $f\"; openssl x509 -in \"$f\" -noout -enddate 2>/dev/null || echo 'NOT_FOUND_OR_UNREADABLE'; done"
+    targets: ["openstack-control-01"]
+    primary_of: "openstack-control-01"
+
+  - section: "3. 공통 보안 및 운영 점검"
+    subsection: "3.1 인증서 만료일 점검"
+    title: "3.1.2 Kubernetes 인증서 만료일 점검 (RKE2 경로)"
+    command: >-
+      for d in /var/lib/rancher/rke2/agent/ /var/lib/rancher/rke2/etc/tls/registries/
+      /var/lib/rancher/rke2/server/tls/ /etc/pki/tls/certs/ /etc/pki/ca-trust/source/anchors/;
+      do [ -e "$d" ] || continue; find "$d" -maxdepth 3 -type f \( -name '*.crt' -o -name '*.pem' \) 2>/dev/null; done
+      | sort -u | while read -r f; do echo "[FILE] $f"; openssl x509 -in "$f" -noout -enddate 2>/dev/null
+      || echo 'NOT_X509_OR_UNREADABLE'; done
+    targets: ["rke2-kubernetes-cluster"]
+
+  - section: "3. 공통 보안 및 운영 점검"
+    subsection: "3.1 인증서 만료일 점검"
+    title: "3.1.2 Kubernetes 인증서 만료일 점검 (Vanila 경로)"
+    command: >-
+      for d in /etc/kubernetes/pki/ /var/lib/kubelet/pki/; do [ -e "$d" ] || continue;
+      find "$d" -maxdepth 3 -type f \( -name '*.crt' -o -name '*.pem' \) 2>/dev/null; done
+      | sort -u | while read -r f; do echo "[FILE] $f"; openssl x509 -in "$f" -noout -enddate 2>/dev/null
+      || echo 'NOT_X509_OR_UNREADABLE'; done
+    targets: ["vanila-kubernetes-cluster"]
+
+  - section: "3. 공통 보안 및 운영 점검"
+    subsection: "3.1 인증서 만료일 점검"
+    title: "3.1.2 Kubernetes 인증서 만료일 점검 (외부 도메인 TLS)"
+    command: >-
+      for h in rancher.kube.test.nhbank nexus.kube.test.nhbank market.kube.test.nhbank
+      genai.market.kube.test.nhbank kibana.kube.test.nhbank; do
+      echo "[HOST] $h"; echo | openssl s_client -servername "$h" -connect "$h:443" 2>/dev/null
+      | openssl x509 -noout -enddate -issuer -subject 2>/dev/null
+      || echo 'TLS_HANDSHAKE_OR_CERT_PARSE_FAILED'; done
+    targets: ["nexus-mgmt"]

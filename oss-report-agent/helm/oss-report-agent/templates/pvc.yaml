@@ -1,0 +1,16 @@
+﻿{{- if and (eq .Values.checkStorage.mode "pvc") .Values.checkStorage.pvc.create (eq .Values.checkStorage.pvc.existingClaim "") }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.checkStorage.pvc.name | quote }}
+  labels:
+    app.kubernetes.io/name: {{ include "oss-report-agent.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  accessModes:
+{{ toYaml .Values.checkStorage.pvc.accessModes | indent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.checkStorage.pvc.size | quote }}
+  storageClassName: {{ .Values.checkStorage.pvc.storageClassName | quote }}
+{{- end }}

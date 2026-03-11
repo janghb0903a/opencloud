@@ -1,0 +1,24 @@
+﻿---
+- name: Prepare output directory on bastion
+  hosts: localhost
+  gather_facts: false
+  vars:
+    run_date: "{{ now(fmt='%y%m%d') }}"
+    output_dir: "{{ (check_output_root | default('/tmp')) ~ '/' ~ (check_dir_prefix | default('check')) ~ '_' ~ run_date }}"
+  tasks:
+    - name: Create output directory
+      ansible.builtin.file:
+        path: "{{ output_dir }}"
+        state: directory
+        mode: "0755"
+
+- name: Run monthly checks and render host reports
+  hosts: openstack-control:openstack-compute:openstack-control-01:kubernetes-master:kubernetes-worker:kubernetes-master-01:nexus-mgmt:vanila-kubernetes-cluster:rke2-kubernetes-cluster
+  gather_facts: false
+  vars:
+    run_date: "{{ now(fmt='%y%m%d') }}"
+    output_dir: "{{ (check_output_root | default('/tmp')) ~ '/' ~ (check_dir_prefix | default('check')) ~ '_' ~ run_date }}"
+  roles:
+    - role: monthly_check
+
+

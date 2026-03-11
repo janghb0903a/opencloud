@@ -1,0 +1,143 @@
+﻿---
+- name: Ensure output directory exists on bastion
+  ansible.builtin.file:
+    path: "{{ output_dir }}"
+    state: directory
+    mode: "0755"
+  delegate_to: localhost
+  run_once: true
+- name: Load check item definitions
+  ansible.builtin.include_vars:
+    file: "{{ role_path }}/vars/check_items.yml"
+
+- name: Execute checklist commands per host
+  ansible.builtin.shell: >-
+    {{ item.command if _run_item else "true" }}
+  args:
+    executable: /bin/bash
+  changed_when: false
+  failed_when: false
+  loop: "{{ check_items }}"
+  loop_control:
+    label: "{{ item.title }}"
+  register: check_exec
+  vars:
+    _effective_groups: >-
+      {{
+        group_names
+        + (["openstack-control"] if "openstack-control-01" in group_names else [])
+        + (["kubernetes-master"] if "kubernetes-master-01" in group_names else [])
+      }}
+    _target_match: >-
+      {{
+        (item.targets is not defined) or
+        (item.targets | length == 0) or
+        ((_effective_groups | intersect(item.targets)) | length > 0)
+      }}
+    _primary_match: >-
+      {{
+        (item.primary_of is not defined) or
+        (inventory_hostname in (groups[item.primary_of] | default([])))
+      }}
+    _host_match: >-
+      {{
+        (item.hosts is not defined) or
+        (inventory_hostname in item.hosts)
+      }}
+    _run_item: "{{ _target_match and _primary_match and _host_match }}"
+
+- name: Build rendered item list
+  ansible.builtin.set_fact:
+    rendered_items: "{{ (rendered_items | default([])) + [ _entry ] }}"
+  loop: "{{ check_items | zip(check_exec.results) | list }}"
+  loop_control:
+    label: "{{ item.0.title }}"
+  vars:
+    _effective_groups: >-
+      {{
+        group_names
+        + (["openstack-control"] if "openstack-control-01" in group_names else [])
+        + (["kubernetes-master"] if "kubernetes-master-01" in group_names else [])
+      }}
+    _target_match: >-
+      {{
+        (item.0.targets is not defined) or
+        (item.0.targets | length == 0) or
+        ((_effective_groups | intersect(item.0.targets)) | length > 0)
+      }}
+    _primary_match: >-
+      {{
+        (item.0.primary_of is not defined) or
+        (inventory_hostname in (groups[item.0.primary_of] | default([])))
+      }}
+    _host_match: >-
+      {{
+        (item.0.hosts is not defined) or
+        (inventory_hostname in item.0.hosts)
+      }}
+    _executed: "{{ _target_match and _primary_match and _host_match }}"
+    _cmd_chars: "{{ check_report_cmd_preview_chars | default(180) | int }}"
+    _out_head: "{{ check_report_stdout_head_lines | default(20) | int }}"
+    _out_tail: "{{ check_report_stdout_tail_lines | default(10) | int }}"
+    _err_head: "{{ check_report_stderr_head_lines | default(10) | int }}"
+    _max_chars: "{{ check_report_max_chars | default(4000) | int }}"
+    _raw_stdout: "{{ item.1.stdout | default('') }}"
+    _raw_stderr: "{{ item.1.stderr | default('') }}"
+    _out_lines: "{{ _raw_stdout.split('\n') if (_raw_stdout | length > 0) else [] }}"
+    _err_lines: "{{ _raw_stderr.split('\n') if (_raw_stderr | length > 0) else [] }}"
+    _omit_count: "{{ (_out_lines | length | int) - (_out_head | int) - (_out_tail | int) }}"
+    _out_compacted: >-
+      {{
+        _raw_stdout
+        if ((_out_lines | length | int) <= ((_out_head | int) + (_out_tail | int)))
+        else (
+          (_out_lines[:(_out_head | int)])
+          + ['... (omitted ' ~ (_omit_count | string) ~ ' lines) ...']
+          + (_out_lines[-(_out_tail | int):])
+        ) | join('\n')
+      }}
+    _err_compacted: >-
+      {{
+        _raw_stderr
+        if ((_err_lines | length | int) <= (_err_head | int))
+        else (
+          (_err_lines[:(_err_head | int)]) + ['... (stderr truncated) ...']
+        ) | join('\n')
+      }}
+    _stdout_summary: >-
+      {{
+        _out_compacted
+        if ((_out_compacted | length | int) <= (_max_chars | int))
+        else (_out_compacted[:(_max_chars | int)] ~ '\n... (output truncated by max chars) ...')
+      }}
+    _stderr_summary: >-
+      {{
+        _err_compacted
+        if ((_err_compacted | length | int) <= (_max_chars | int))
+        else (_err_compacted[:(_max_chars | int)] ~ '\n... (stderr truncated by max chars) ...')
+      }}
+    _entry:
+      section: "{{ item.0.section }}"
+      subsection: "{{ item.0.subsection }}"
+      title: "{{ item.0.title }}"
+      command: "{{ item.0.command }}"
+      command_preview: >-
+        {{
+          item.0.command
+          if ((item.0.command | length | int) <= (_cmd_chars | int))
+          else (item.0.command[:(_cmd_chars | int)] ~ ' ...')
+        }}
+      executed: "{{ _executed | bool }}"
+      rc: "{{ item.1.rc | default('') }}"
+      stdout: "{{ _stdout_summary }}"
+      stderr: "{{ _stderr_summary }}"
+
+- name: Render per-host markdown report on bastion
+  ansible.builtin.template:
+    src: host_report.md.j2
+    dest: "{{ output_dir }}/{{ inventory_hostname }}_check"
+    mode: "0644"
+  delegate_to: localhost
+
+
+

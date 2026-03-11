@@ -1,0 +1,33 @@
+{% set ns = namespace(section='', subsection='') -%}
+# {{ inventory_hostname }} Monthly Check Report
+- date: {{ run_date }}
+- output: {{ output_dir }}/{{ inventory_hostname }}_check
+- groups: {{ group_names | join(', ') }}
+
+{% for item in rendered_items %}
+{% if item.executed | bool %}
+{% if item.section != ns.section %}
+## {{ item.section }}
+
+{% set ns.section = item.section %}
+{% set ns.subsection = '' %}
+{% endif %}
+{% if item.subsection != ns.subsection %}
+### {{ item.subsection }}
+
+{% set ns.subsection = item.subsection %}
+{% endif %}
+#### {{ item.title }}
+```bash
+$ {{ item.command_preview | default(item.command) }}
+```
+```text
+{{ item.stdout | default('') }}
+{% if item.stderr %}
+[stderr]
+{{ item.stderr }}
+{% endif %}
+```
+{% endif %}
+
+{% endfor %}

@@ -1,0 +1,96 @@
+﻿# host: demo-control-01
+# collected_at: 2026-02-25 11:20:00
+
+$ top -bn1 | grep Cpu
+%Cpu(s): 78.3 us, 10.2 sy,  0.0 ni,  7.2 id,  3.9 wa,  0.0 hi,  0.4 si,  0.0 st
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:          64240       58810        1300         920        4130        3640
+Swap:          8192         512        7680
+
+$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda2       120G  110G  5.2G  96% /
+/dev/sdb1       500G  320G  181G  64% /var/lib
+
+$ timedatectl status
+               Local time: Wed 2026-02-25 11:21:10 KST
+           Universal time: Wed 2026-02-25 02:21:10 UTC
+                 RTC time: Wed 2026-02-25 02:21:10
+                Time zone: Asia/Seoul (KST, +0900)
+System clock synchronized: yes
+
+$ systemctl is-active haproxy
+active
+
+$ systemctl is-active rabbitmq-server
+active
+
+$ systemctl is-active memcached
+inactive
+
+$ pcs status
+Cluster name: openstack_cluster
+Stack: corosync
+Current DC: ctrl-01 (version 2.1.5)
+2 nodes configured
+8 resource instances configured
+Failed Resource Actions:
+ * rabbitmq_monitor_30000 on ctrl-02 'not running' (7): call=90, status='complete', exitreason=''
+
+$ openstack hypervisor list
++----+----------------+-----------------+---------------+-------+
+| ID | Hypervisor Hostname | Hypervisor Type | Host IP       | State |
++----+----------------+-----------------+---------------+-------+
+| 1  | compute-01     | QEMU            | 10.10.1.11     | up    |
+| 2  | compute-02     | QEMU            | 10.10.1.12     | up    |
+| 3  | compute-03     | QEMU            | 10.10.1.13     | down  |
++----+----------------+-----------------+---------------+-------+
+
+$ openstack volume list --long | grep -E 'error|creating'
+| 6f2... | vol-db01   | error    | 100 |
+| 8a4... | vol-log01  | creating |  50 |
+
+$ openstack image list
++--------------------------------------+------------------------+--------+
+| ID                                   | Name                   | Status |
++--------------------------------------+------------------------+--------+
+| 16a...                               | ubuntu-22.04-golden    | active |
+| 77b...                               | centos-7-legacy        | queued |
++--------------------------------------+------------------------+--------+
+
+$ journalctl -u nova-compute -n 20 --no-pager
+Feb 25 11:14:03 compute-03 nova-compute[2241]: ERROR libvirtError: internal error: connection closed
+Feb 25 11:14:03 compute-03 nova-compute[2241]: ERROR Compute service record updated to down
+
+$ kubectl get nodes
+NAME         STATUS     ROLES                  AGE   VERSION
+master-01    Ready      control-plane,etcd     84d   v1.31.2+rke2r1
+worker-01    Ready      <none>                 84d   v1.31.2+rke2r1
+worker-05    NotReady   <none>                 84d   v1.31.2+rke2r1
+
+$ kubectl get pods -A | grep -E 'CrashLoopBackOff|Pending'
+ops           backup-job-28931-lf2xw                 0/1     Pending             0          8m
+monitoring    promtail-7sd9m                         0/1     CrashLoopBackOff    5          21m
+
+$ kubectl get pvc -A | grep Pending
+data          pg-data-claim-0                        Pending                                      sc-dell-xfs-retain   20m
+
+$ kubectl get events -A --sort-by=.lastTimestamp | tail -n 5
+monitoring   5m   Warning   BackOff              pod/promtail-7sd9m    Back-off restarting failed container
+ops          7m   Warning   FailedScheduling     pod/backup-job-...    0/6 nodes are available: 2 Insufficient memory.
+
+$ kubectl logs -n cattle-system deploy/rancher --tail=20
+2026-02-25T02:12:11Z [ERROR] LDAP auth failed for user admin
+2026-02-25T02:13:52Z [INFO] API health check OK
+
+$ openssl x509 -in /etc/kubernetes/pki/apiserver.crt -noout -enddate
+notAfter=Mar 18 00:00:00 2026 GMT
+
+$ openstack endpoint list | head -n 5
++----------------------------------+-----------+--------------+--------------+---------+
+| ID                               | Region    | Service Name | Service Type | Enabled |
++----------------------------------+-----------+--------------+--------------+---------+
+| ...                              | RegionOne | keystone     | identity     | True    |
++----------------------------------+-----------+--------------+--------------+---------+

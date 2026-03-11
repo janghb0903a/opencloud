@@ -1,0 +1,6 @@
+﻿apiVersion: v2
+name: nexus-image-pusher
+description: Web app to upload docker archive images and push them to selected private Nexus registries
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

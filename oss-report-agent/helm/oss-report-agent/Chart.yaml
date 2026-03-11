@@ -1,0 +1,6 @@
+﻿apiVersion: v2
+name: oss-report-agent
+description: OpenStack/Kubernetes check-report AI agent using external Ollama API
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

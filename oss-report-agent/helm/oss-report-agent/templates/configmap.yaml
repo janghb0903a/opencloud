@@ -1,0 +1,18 @@
+﻿apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "oss-report-agent.fullname" . }}-config
+  labels:
+    app.kubernetes.io/name: {{ include "oss-report-agent.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  LLM_PROVIDER: {{ .Values.env.LLM_PROVIDER | quote }}
+  OLLAMA_BASE_URL: {{ .Values.env.OLLAMA_BASE_URL | quote }}
+  OLLAMA_MODEL: {{ .Values.env.OLLAMA_MODEL | quote }}
+  OPENAI_BASE_URL: {{ .Values.env.OPENAI_BASE_URL | quote }}
+  OPENAI_MODEL: {{ .Values.env.OPENAI_MODEL | quote }}
+  OPENAI_API_KEY: {{ .Values.env.OPENAI_API_KEY | quote }}
+  CHECK_INPUT_PATH: {{ .Values.env.CHECK_INPUT_PATH | quote }}
+  CHECK_PATH_PATTERN: {{ .Values.env.CHECK_PATH_PATTERN | quote }}
+  OUTPUT_DIR: {{ .Values.env.OUTPUT_DIR | quote }}
+  REQUEST_TIMEOUT_SECONDS: {{ .Values.env.REQUEST_TIMEOUT_SECONDS | quote }}

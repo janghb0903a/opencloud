@@ -1,0 +1,57 @@
+﻿replicaCount: 1
+
+image:
+  repository: oss-report-agent
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8000
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+env:
+  LLM_PROVIDER: "ollama"
+  OLLAMA_BASE_URL: "http://ollama-api.default.svc.cluster.local:11434"
+  OLLAMA_MODEL: "llama3.1:8b"
+  OPENAI_BASE_URL: "http://vllm-openai.default.svc.cluster.local:8000"
+  OPENAI_MODEL: "meta-llama/Llama-3.1-8B-Instruct"
+  OPENAI_API_KEY: ""
+  CHECK_INPUT_PATH: "/input/checks"
+  CHECK_PATH_PATTERN: "/tmp/check_{date}"
+  OUTPUT_DIR: "/input/checks/reports"
+  REQUEST_TIMEOUT_SECONDS: "180"
+
+checkStorage:
+  mode: "pvc"
+  mountPath: "/input/checks"
+  pvc:
+    create: true
+    existingClaim: ""
+    name: "oss-report-agent-check-pvc"
+    storageClassName: "sc-dell-xfs-retain"
+    accessModes:
+      - ReadWriteOnce
+    size: "20Gi"
+
+hostTmp:
+  enabled: false
+  path: "/tmp"
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: oss-report-agent.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []

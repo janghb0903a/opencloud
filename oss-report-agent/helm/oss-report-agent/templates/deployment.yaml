@@ -1,0 +1,73 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "oss-report-agent.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "oss-report-agent.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "oss-report-agent.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "oss-report-agent.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: oss-report-agent
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: {{ include "oss-report-agent.fullname" . }}-config
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          volumeMounts:
+            - name: tmp-volume
+              mountPath: /tmp
+{{- if eq .Values.checkStorage.mode "pvc" }}
+            - name: check-storage-volume
+              mountPath: {{ .Values.checkStorage.mountPath | quote }}
+{{- end }}
+      volumes:
+        - name: tmp-volume
+{{- if .Values.hostTmp.enabled }}
+          hostPath:
+            path: {{ .Values.hostTmp.path | quote }}
+            type: Directory
+{{- else }}
+          emptyDir: {}
+{{- end }}
+{{- if eq .Values.checkStorage.mode "pvc" }}
+        - name: check-storage-volume
+          persistentVolumeClaim:
+{{- if ne .Values.checkStorage.pvc.existingClaim "" }}
+            claimName: {{ .Values.checkStorage.pvc.existingClaim | quote }}
+{{- else }}
+            claimName: {{ .Values.checkStorage.pvc.name | quote }}
+{{- end }}
+{{- end }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+      affinity:
+{{ toYaml .Values.affinity | indent 8 }}

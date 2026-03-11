@@ -1,0 +1,237 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexus Image Pusher</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #0b5fff;
+      --ok: #0f9d58;
+      --err: #d93025;
+    }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Noto Sans KR", sans-serif;
+      color: var(--text);
+      background: linear-gradient(135deg, #eef2ff, #f8fafc 45%, #e7f7ef);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    p { margin: 0 0 16px; color: var(--muted); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    label { font-size: 13px; color: #374151; display: block; margin-bottom: 6px; }
+    input, select, button {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      background: #fff;
+    }
+    button {
+      background: var(--primary);
+      color: #fff;
+      border: 0;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:disabled { opacity: 0.6; cursor: default; }
+    .progress {
+      width: 100%;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+      height: 14px;
+      margin: 8px 0;
+    }
+    .bar {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #0b5fff, #22c55e);
+      transition: width .25s ease;
+    }
+    .status { font-weight: 600; }
+    .ok { color: var(--ok); }
+    .err { color: var(--err); }
+    pre {
+      margin: 0;
+      max-height: 280px;
+      overflow: auto;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    ul { margin: 8px 0 0; padding-left: 20px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Nexus Image Pusher</h1>
+      <p>이미지 아카이브 파일을 업로드하면 이름/태그를 확인 후 선택한 넥서스 레지스트리로 push 합니다.</p>
+      <form id="pushForm">
+        <div class="grid">
+          <div>
+            <label for="archiveFile">이미지 파일 (docker save tar)</label>
+            <input id="archiveFile" type="file" name="file" accept=".tar,.tgz,.tar.gz" required />
+          </div>
+          <div>
+            <label for="metacode">메타코드 (소문자 4자리)</label>
+            <input id="metacode" type="text" name="metacode" maxlength="4" minlength="4" pattern="[a-z]{4}" placeholder="예: ocps" required />
+          </div>
+          <div>
+            <label for="registry">넥서스 레지스트리</label>
+            <select id="registry" name="registry">
+              {% for registry in registries %}
+              <option value="{{ registry }}" {% if registry == default_registry %}selected{% endif %}>{{ registry }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:12px;">
+          <button id="submitBtn" type="submit">업로드 후 Push 시작</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="status" id="statusText">대기 중</div>
+      <div class="progress"><div class="bar" id="progressBar"></div></div>
+      <div id="messageText" style="color:#4b5563; margin-bottom:10px;"></div>
+      <div class="grid">
+        <div>
+          <label>확인된 이미지 목록</label>
+          <ul id="imagesList"></ul>
+        </div>
+        <div>
+          <label>최종 Push 대상</label>
+          <ul id="destinationsList"></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <label>실행 로그</label>
+      <pre id="logs"></pre>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('pushForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusText = document.getElementById('statusText');
+    const messageText = document.getElementById('messageText');
+    const progressBar = document.getElementById('progressBar');
+    const logs = document.getElementById('logs');
+    const imagesList = document.getElementById('imagesList');
+    const destinationsList = document.getElementById('destinationsList');
+
+    let pollHandle = null;
+
+    function setStatus(status, message, progress) {
+      statusText.textContent = `상태: ${status}`;
+      statusText.className = 'status';
+      if (status === 'completed') statusText.classList.add('ok');
+      if (status === 'failed') statusText.classList.add('err');
+      messageText.textContent = message || '';
+      progressBar.style.width = `${Math.max(0, Math.min(100, progress || 0))}%`;
+    }
+
+    function fillList(element, items) {
+      element.innerHTML = '';
+      if (!items || items.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = '-';
+        element.appendChild(li);
+        return;
+      }
+      items.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        element.appendChild(li);
+      });
+    }
+
+    async function pollJob(jobId) {
+      if (pollHandle) clearInterval(pollHandle);
+      pollHandle = setInterval(async () => {
+        const res = await fetch(`/api/jobs/${jobId}`);
+        if (!res.ok) {
+          clearInterval(pollHandle);
+          setStatus('failed', '작업 상태 조회 실패', 0);
+          submitBtn.disabled = false;
+          return;
+        }
+
+        const job = await res.json();
+        setStatus(job.status, job.message, job.progress);
+        fillList(imagesList, job.images || []);
+        fillList(destinationsList, job.destinations || []);
+        logs.textContent = (job.logs || []).join('\n');
+        logs.scrollTop = logs.scrollHeight;
+
+        if (job.status === 'completed' || job.status === 'failed') {
+          clearInterval(pollHandle);
+          submitBtn.disabled = false;
+        }
+      }, 1000);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const metacode = document.getElementById('metacode').value.trim();
+      if (!/^[a-z]{4}$/.test(metacode)) {
+        alert('메타코드는 소문자 4자리만 허용됩니다.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      logs.textContent = '';
+      fillList(imagesList, []);
+      fillList(destinationsList, []);
+      setStatus('queued', '파일 업로드 중...', 1);
+
+      const formData = new FormData(form);
+      formData.set('metacode', metacode);
+
+      const res = await fetch('/api/jobs', { method: 'POST', body: formData });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: '요청 실패' }));
+        setStatus('failed', err.detail || '요청 실패', 0);
+        submitBtn.disabled = false;
+        return;
+      }
+
+      const payload = await res.json();
+      pollJob(payload.job_id);
+    });
+  </script>
+</body>
+</html>

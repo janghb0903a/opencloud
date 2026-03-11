@@ -1,0 +1,7 @@
+﻿check_output_root: "/tmp"
+check_dir_prefix: "check"
+check_report_cmd_preview_chars: 180
+check_report_stdout_head_lines: 20
+check_report_stdout_tail_lines: 10
+check_report_stderr_head_lines: 10
+check_report_max_chars: 4000

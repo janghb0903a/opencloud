@@ -1,0 +1,15 @@
+﻿services:
+  report-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: oss-report-agent
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - OLLAMA_MODEL=llama3.1:8b
+      - CHECK_PATH_PATTERN=/tmp/check_{date}
+      - OUTPUT_DIR=/tmp/reports
+    volumes:
+      - /tmp:/tmp

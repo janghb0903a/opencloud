@@ -1,0 +1,34 @@
+﻿[openstack-control]
+# ctrl01 ansible_host=10.0.0.11
+# ctrl02 ansible_host=10.0.0.12
+
+[openstack-compute]
+# cmp01 ansible_host=10.0.1.21
+# cmp02 ansible_host=10.0.1.22
+
+[openstack-control-01]
+# ctrl01
+
+[kubernetes-master]
+# mst01 ansible_host=10.0.2.31
+# mst02 ansible_host=10.0.2.32
+
+[kubernetes-worker]
+# wrk01 ansible_host=10.0.2.41
+# wrk02 ansible_host=10.0.2.42
+
+[kubernetes-master-01]
+# mst01
+
+[nexus-mgmt]
+# bn01
+
+[vanila-kubernetes-cluster]
+# vk8s01
+
+[rke2-kubernetes-cluster]
+# rk8s01
+
+[all:vars]
+ansible_user=ubuntu
+# ansible_ssh_private_key_file=~/.ssh/id_rsa
