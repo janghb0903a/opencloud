@@ -1,0 +1,30 @@
+image:
+  repository: registry.internal.local/monitoring/openstack-vm-name-exporter
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+envConfig:
+  POLL_INTERVAL: "60"
+  PORT: "9189"
+  OS_CLOUD: ""
+
+secret:
+  create: true
+  existingSecret: ""
+  data:
+    OS_AUTH_URL: "https://keystone.internal.local:5000/v3"
+    OS_IDENTITY_API_VERSION: "3"
+    OS_AUTH_TYPE: "v3password"
+    OS_USERNAME: "monitoring"
+    OS_PASSWORD: "replace-me"
+    OS_PROJECT_NAME: "admin"
+    OS_USER_DOMAIN_NAME: "Default"
+    OS_PROJECT_DOMAIN_NAME: "Default"
+
+serviceMonitor:
+  enabled: true
+  namespace: monitoring
+  labels: {}
+  interval: 60s
+  scrapeTimeout: 10s
+  path: /metrics

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: openstack-vm-name-exporter
+description: OpenStack UUID to VM name mapping exporter
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
