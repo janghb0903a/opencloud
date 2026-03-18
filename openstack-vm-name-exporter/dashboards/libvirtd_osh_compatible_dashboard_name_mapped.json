@@ -3398,6 +3398,311 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "collapsed": false,
+      "datasource": "${DS_VICTORIAMETRICS}",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 137
+      },
+      "id": 36,
+      "panels": [],
+      "title": "CPU Stats (by instance and VM name)",
+      "type": "row"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_VICTORIAMETRICS}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "hiddenSeries": false,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.5",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      },
+      "description": "VM 전체 CPU 사용량. 1 vCPU를 100%로 환산하므로 멀티 vCPU VM은 100%를 넘을 수 있습니다.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 138
+      },
+      "id": 37,
+      "targets": [
+        {
+          "expr": "((rate(libvirtd_domain_cpu_time{instance=~\"$instance.*\", uuid=~\"$uuid\"}[5m]) / 1e9) * 100) + on(uuid) group_left(name) (0 * max by (uuid, name) (openstack_vm_identity{uuid=~\"$uuid\"}))",
+          "interval": "",
+          "legendFormat": "{{name}}",
+          "refId": "A",
+          "format": "time_series"
+        }
+      ],
+      "title": "VM CPU usage (% of one core)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "yaxes": [
+        {
+          "format": "percent",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ]
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_VICTORIAMETRICS}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "hiddenSeries": false,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.5",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      },
+      "description": "할당된 vCPU 수로 정규화한 CPU 사용률입니다. on(instance, uuid) 매칭으로 분모/분자 라벨셋 차이를 맞췄습니다.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 138
+      },
+      "id": 38,
+      "targets": [
+        {
+          "expr": "(((100 * rate(libvirtd_domain_cpu_time{instance=~\"$instance.*\", uuid=~\"$uuid\"}[5m])) / 1e9) / on(instance, uuid) count by (instance, uuid) (libvirtd_domain_vcpu_state{instance=~\"$instance.*\", uuid=~\"$uuid\"})) + on(uuid) group_left(name) (0 * max by (uuid, name) (openstack_vm_identity{uuid=~\"$uuid\"}))",
+          "interval": "",
+          "legendFormat": "{{name}}",
+          "refId": "A",
+          "format": "time_series"
+        }
+      ],
+      "title": "VM CPU usage (% of provisioned vCPU)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "yaxes": [
+        {
+          "format": "percent",
+          "label": null,
+          "logBase": 1,
+          "max": "100",
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ]
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_VICTORIAMETRICS}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "hiddenSeries": false,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.5",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      },
+      "description": "vCPU별 CPU 사용률입니다. 특정 VM을 선택해서 볼 때 가장 유용합니다.",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 146
+      },
+      "id": 39,
+      "targets": [
+        {
+          "expr": "((rate(libvirtd_domain_vcpu_time{instance=~\"$instance.*\", uuid=~\"$uuid\"}[5m]) / 1e9) * 100) + on(uuid) group_left(name) (0 * max by (uuid, name) (openstack_vm_identity{uuid=~\"$uuid\"}))",
+          "interval": "",
+          "legendFormat": "{{name}} - vCPU {{vcpu}}",
+          "refId": "A",
+          "format": "time_series"
+        }
+      ],
+      "title": "VM vCPU usage (per vCPU)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "yaxes": [
+        {
+          "format": "percent",
+          "label": null,
+          "logBase": 1,
+          "max": "100",
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ]
     }
   ],
   "refresh": "10s",
@@ -3557,8 +3862,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Libvirtd (OpenStack-Helm compatible) (VM name mapped)",
+  "title": "Libvirtd (OpenStack-Helm compatible) (VM name mapped) + VM CPU",
   "uid": "libvirtd-osh-compat",
-  "version": 2,
+  "version": 3,
   "description": "Adapted from the original Libvirt dashboard to work with vexxhost/libvirtd_exporter deployed by OpenStack-Helm. UUID-based panels were joined with openstack_vm_identity to display VM names."
 }
