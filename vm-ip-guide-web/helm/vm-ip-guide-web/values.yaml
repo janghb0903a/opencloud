@@ -1,0 +1,34 @@
+replicaCount: 1
+
+image:
+  repository: registry.internal/platform/vm-ip-guide-web
+  tag: latest
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+cloudPortalUrl: "#"
+cloudPortalUrlDev: ""
+cloudPortalUrlProd: ""
+
+resources: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: vm-ip-guide.example.internal
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []

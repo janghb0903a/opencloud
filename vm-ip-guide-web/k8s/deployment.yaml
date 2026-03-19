@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vm-ip-guide-web
+  labels:
+    app: vm-ip-guide-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vm-ip-guide-web
+  template:
+    metadata:
+      labels:
+        app: vm-ip-guide-web
+    spec:
+      containers:
+        - name: web
+          image: your-registry/vm-ip-guide-web:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: CLOUD_PORTAL_URL
+              value: "#"
+            - name: CLOUD_PORTAL_URL_DEV
+              value: "https://dev-portal.example.internal"
+            - name: CLOUD_PORTAL_URL_PROD
+              value: "https://prod-portal.example.internal"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vm-ip-guide-web
+  labels:
+    app: vm-ip-guide-web
+spec:
+  selector:
+    app: vm-ip-guide-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80

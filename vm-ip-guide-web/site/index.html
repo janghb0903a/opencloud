@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OSC VM IP/Hostname Guide</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="hero">
+      <p class="eyebrow">Open Source Cloud Platform</p>
+      <h1>VM 생성 전 IP/Hostname 체크</h1>
+      <p>환경 선택부터 IP 대역, Hostname 검증, 후속 작업 안내까지 한 번에 진행합니다.</p>
+    </header>
+
+    <nav class="stepper">
+      <span class="step-pill is-active">1 환경</span>
+      <span class="step-pill">2 IP</span>
+      <span class="step-pill">3 Hostname</span>
+      <span class="step-pill">4 완료</span>
+    </nav>
+
+    <section id="step-env" class="panel active">
+      <h2>1) 환경 선택</h2>
+      <p class="muted">개발 또는 운영 중 하나를 선택하세요.</p>
+      <div class="env-grid">
+        <button class="env-btn" data-env="dev"><span class="env-title">개발</span></button>
+        <button class="env-btn" data-env="prod"><span class="env-title">운영</span></button>
+      </div>
+    </section>
+
+    <section id="step-ip" class="panel">
+      <h2>2) 필요한 IP 선택</h2>
+      <p class="muted">각 네트워크에서 필요한 C 클래스 1개씩 선택하세요.</p>
+
+      <div id="prod-warning" class="alert hidden">
+        운영 환경은 Backup 구성을 위해 Backup IP 채번이 필수이며, 추후 작업 시 서버 다운타임이 필요합니다.
+      </div>
+
+      <div class="ip-layout">
+        <article class="card">
+          <h3>서비스</h3>
+          <p class="muted small">먼저 SLB / non-SLB를 선택하면 해당 C 클래스 목록이 표시됩니다.</p>
+          <div class="segment">
+            <label><input type="radio" name="service_mode" value="" checked /> 선택 안 함</label>
+            <label><input type="radio" name="service_mode" value="slb" /> SLB</label>
+            <label><input type="radio" name="service_mode" value="nonslb" /> non-SLB</label>
+          </div>
+          <div class="always-tip">SLB: L4 장비를 통해 VIP를 할당 받아 로드밸런싱 구성할 경우 선택</div>
+          <div id="service-select-wrap" class="select-wrap hidden">
+            <label for="service-select">서비스 C 클래스</label>
+            <select id="service-select" class="input-select"></select>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>DB</h3>
+          <label for="db-select">DB C 클래스</label>
+          <select id="db-select" class="input-select"></select>
+        </article>
+
+        <article class="card">
+          <h3>MFT</h3>
+          <label for="mft-select">MFT C 클래스</label>
+          <select id="mft-select" class="input-select"></select>
+        </article>
+
+        <article class="card">
+          <h3>Backup</h3>
+          <label for="backup-select">Backup C 클래스</label>
+          <select id="backup-select" class="input-select"></select>
+        </article>
+      </div>
+
+      <div class="info-box">
+        <h3>IP 신청 안내</h3>
+        <ul>
+          <li>신청경로: 정보보호포탈 - IP신청서 - 서버IP신청서</li>
+          <li>망구분: <span id="network-kind"></span></li>
+        </ul>
+      </div>
+
+      <p id="ip-error" class="error hidden"></p>
+      <div class="button-row">
+        <button id="back-to-env" class="btn secondary">이전</button>
+        <button id="to-hostname" class="btn">다음</button>
+      </div>
+    </section>
+
+    <section id="step-hostname" class="panel">
+      <h2>3) Hostname 유효성 체크</h2>
+
+      <div class="rule-box rules-fancy">
+        <h3>12자리 규칙</h3>
+        <div class="rule-grid">
+          <span class="rule-chip">1~2: <b>nb</b></span>
+          <span class="rule-chip">3~6: 소문자 4자리 메타코드</span>
+          <span class="rule-chip">7: <b>k</b></span>
+          <span class="rule-chip">8: 개발 <b>t</b> / 운영 <b>o</b></span>
+          <span class="rule-chip">9~10: 업무 약어 2자리 (예: db, wb, ws)</span>
+          <span class="rule-chip">11~12: 숫자 2자리</span>
+        </div>
+      </div>
+
+      <div class="hostname-visual-wrap">
+        <p class="muted small">각 칸에 마우스를 올리면 자리별 규칙을 볼 수 있습니다.</p>
+        <div class="hostname-visual" aria-label="12자리 호스트네임 규칙 시각화">
+          <span class="slot fixed" data-tip="고정값: n">n</span>
+          <span class="slot fixed" data-tip="고정값: b">b</span>
+          <span class="slot" data-tip="메타코드 (소문자 알파벳 4자리)">a</span>
+          <span class="slot" data-tip="메타코드 (소문자 알파벳 4자리)">b</span>
+          <span class="slot" data-tip="메타코드 (소문자 알파벳 4자리)">c</span>
+          <span class="slot" data-tip="메타코드 (소문자 알파벳 4자리)">d</span>
+          <span class="slot fixed" data-tip="고정값: k">k</span>
+          <span class="slot env" id="hostname-slot-env" data-tip="환경 구분 (개발: t / 운영: o)">t</span>
+          <span class="slot" data-tip="업무 약어 (소문자 2자리, 예: db, wb, ws)">x</span>
+          <span class="slot" data-tip="업무 약어 (소문자 2자리, 예: db, wb, ws)">x</span>
+          <span class="slot" data-tip="일련번호 (숫자 2자리)">0</span>
+          <span class="slot" data-tip="일련번호 (숫자 2자리)">1</span>
+        </div>
+      </div>
+
+      <div id="hostname-list" class="hostname-list"></div>
+      <div class="button-row">
+        <button id="add-hostname" class="btn secondary">+ Hostname 추가</button>
+      </div>
+      <p id="hostname-env-hint" class="muted small"></p>
+      <ul id="hostname-errors" class="error-list"></ul>
+
+      <div class="button-row">
+        <button id="back-to-ip" class="btn secondary">이전</button>
+        <button id="to-finish" class="btn">다음</button>
+      </div>
+    </section>
+
+    <section id="step-finish" class="panel">
+      <h2>4) 완료</h2>
+      <div id="summary" class="summary summary-grid"></div>
+      <p id="portal-warning" class="muted hidden">포탈 URL 환경변수가 설정되지 않았습니다.</p>
+
+      <div class="button-row">
+        <a id="portal-btn" class="btn portal-btn" href="#" target="_blank" rel="noopener noreferrer">클라우드 포탈로 이동</a>
+        <button id="btn-next-steps" class="btn">이후 단계 정리</button>
+        <button id="btn-contacts" class="btn secondary">담당자</button>
+        <button id="back-to-hostname" class="btn secondary">이전</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="modal-backdrop" class="modal-backdrop hidden"></div>
+  <section id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <h3 id="modal-title"></h3>
+      <button id="modal-close" class="icon-btn" aria-label="닫기">X</button>
+    </div>
+    <div id="modal-body" class="modal-body"></div>
+  </section>
+
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
