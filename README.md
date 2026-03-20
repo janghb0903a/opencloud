@@ -1,49 +1,35 @@
-# opencloud
+﻿# opencloud
 
-This repository collects OpenCloud operations and automation tools.
+이 저장소는 OpenCloud 운영 및 자동화 도구를 모아둔 레포지토리입니다.
 
 ## Directory Overview
 
 ### `ansible-monthly-check/`
-- Monthly infrastructure checks for OpenStack and Kubernetes using Ansible
-- Runs from a bastion host and writes one output file per host (`<hostname>_check`)
-- Check outputs can be used as input for `oss-report-agent`
-
-### `grafana-ai-assistant/`
-- AI-assisted Grafana dashboard JSON generation project
-- Includes frontend, backend, and deploy assets (Docker/Helm/K8s)
-
-### `grafana-ai-assistant+/`
-- Alternate/extended workspace for Grafana AI assistant components
-- Contains `frontend/`, `backend/`, `deploy/`, and `docs/`
+- Ansible 기반으로 OpenStack 및 Kubernetes 월간 인프라 점검을 수행합니다.
+- 배스천 호스트에서 실행되며, 호스트별로 출력 파일(`<hostname>_check`)을 생성합니다.
+- 점검 결과는 `oss-report-agent` 입력 데이터로 활용할 수 있습니다.
 
 ### `nexus-image-pusher/`
-- Web app to retag and push images from `docker save` archives (`.tar`) to private Nexus registries
-- Applies metacode-based path rewrite rules (for example: `<registry>/<metacode>/<image>:<tag>`)
-- Supports container runtime and Helm deployment
-
-### `openstack-migration-web/`
-- Web prototype for OpenStack migration support workflows
+- `docker save` 아카이브(`.tar`)의 이미지를 사설 Nexus 레지스트리로 재태깅/푸시하는 웹 앱입니다.
+- 메타코드 기반 경로 재작성 규칙(예: `<registry>/<metacode>/<image>:<tag>`)을 적용합니다.
+- 컨테이너 런타임 및 Helm 배포를 지원합니다.
 
 ### `openstack-vm-name-exporter/`
-- Exports OpenStack VM name and related metadata for monitoring/reporting use
+- OpenStack VM 이름과 관련 메타데이터를 수집해 모니터링/리포팅에 활용할 수 있도록 내보냅니다.
 
 ### `oss-report-agent/`
-- Python report agent that reads `*_check` files and generates Markdown reports
-- Supports Ollama and OpenAI-compatible (vLLM) backends
-- Supports Docker/Helm deployment and PVC-based input paths
+- `*_check` 파일을 읽어 Markdown 보고서를 생성하는 Python 리포트 에이전트입니다.
+- Ollama 및 OpenAI 호환(vLLM) 백엔드를 지원합니다.
+- Docker/Helm 배포와 PVC 기반 입력 경로를 지원합니다.
 
 ### `vm-ip-guide-web/`
-- Web service for VM IP lookup/guide workflows
-- Includes Kubernetes deployment manifests
+- VM IP 조회 및 안내 워크플로우를 제공하는 웹 서비스입니다.
+- Kubernetes 배포 매니페스트를 포함합니다.
 
 ## Quick Links
 
 - [ansible-monthly-check](./ansible-monthly-check/README.md)
-- [grafana-ai-assistant](./grafana-ai-assistant/README.md)
-- `grafana-ai-assistant+/` (README 없음)
 - [nexus-image-pusher](./nexus-image-pusher/README.md)
-- [openstack-migration-web](./openstack-migration-web/README.md)
 - [openstack-vm-name-exporter](./openstack-vm-name-exporter/README.md)
 - [oss-report-agent](./oss-report-agent/README.md)
 - [vm-ip-guide-web](./vm-ip-guide-web/README.md)
