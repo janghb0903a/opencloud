@@ -1,0 +1,42 @@
+﻿image:
+  frontend:
+    repository: registry.local/grafana-ai-assistant-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  backend:
+    repository: registry.local/grafana-ai-assistant-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+
+service:
+  frontend:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+  backend:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+
+config:
+  PROMETHEUS_URL: "http://rancher-monitoring-prometheus.cattle-monitoring-system:9090"
+  AI_BACKEND_URL: "http://<AI_NODE_PORT_IP>:<PORT>/v1"
+  AI_MODEL_NAME: "gpt-oss-120b"
+
+secret:
+  PROMETHEUS_TOKEN: "Bearer <SERVICE_ACCOUNT_TOKEN>"
+  AI_API_KEY: ""
+
+frontend:
+  replicaCount: 1
+
+backend:
+  replicaCount: 1
+
+ingress:
+  enabled: true
+  className: nginx
+  host: grafana-ai-assistant.local
+  path: /
+  pathType: Prefix
+  annotations: {}

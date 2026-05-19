@@ -1,0 +1,94 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-ai-assistant-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana-ai-assistant-backend
+  template:
+    metadata:
+      labels:
+        app: grafana-ai-assistant-backend
+    spec:
+      containers:
+        - name: backend
+          image: registry.local/grafana-ai-assistant-backend:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PROMETHEUS_URL
+              value: "http://rancher-monitoring-prometheus.cattle-monitoring-system:9090"
+            - name: AI_BACKEND_URL
+              value: "http://<AI_NODE_PORT_IP>:<PORT>/v1"
+            - name: AI_MODEL_NAME
+              value: "gpt-oss-120b"
+            - name: PROMETHEUS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-ai-assistant-secret
+                  key: PROMETHEUS_TOKEN
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-ai-assistant-backend
+spec:
+  selector:
+    app: grafana-ai-assistant-backend
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-ai-assistant-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana-ai-assistant-frontend
+  template:
+    metadata:
+      labels:
+        app: grafana-ai-assistant-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: registry.local/grafana-ai-assistant-frontend:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NEXT_PUBLIC_API_BASE_URL
+              value: "http://grafana-ai-assistant-backend:8000"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-ai-assistant-frontend
+spec:
+  selector:
+    app: grafana-ai-assistant-frontend
+  ports:
+    - port: 80
+      targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana-ai-assistant-frontend
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: grafana-ai-assistant.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana-ai-assistant-frontend
+                port:
+                  number: 80

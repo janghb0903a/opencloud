@@ -1,0 +1,22 @@
+deny_operations:
+  - create
+  - delete
+  - reboot
+  - rebuild
+  - resize
+  - migrate
+  - evacuate
+  - attach
+  - detach
+  - reset-state
+  - set
+  - update
+  - enable
+  - disable
+  - upload
+limits:
+  max_results: 500
+  timeout_seconds: 20
+  stdout_limit_bytes: 262144
+  retries: 1
+

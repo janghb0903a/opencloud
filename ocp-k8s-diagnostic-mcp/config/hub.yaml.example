@@ -1,0 +1,22 @@
+# Internal HUB integration config.
+# Keep credentials in environment variables or mounted secret files, never inline.
+hub:
+  endpoints:
+    - name: internal-hub
+      url: https://hub.example.internal
+      verify_tls: true
+      timeout_seconds: 10
+      auth:
+        type: bearer
+        token_ref: env:HUB_INTERNAL_TOKEN
+      headers:
+        X-Client-Name: ocp-k8s-diagnostic-mcp
+
+    # Example for basic auth:
+    # - name: legacy-hub
+    #   url: https://legacy-hub.example.internal
+    #   auth:
+    #     type: basic
+    #     username_ref: env:HUB_LEGACY_USERNAME
+    #     password_ref: env:HUB_LEGACY_PASSWORD
+

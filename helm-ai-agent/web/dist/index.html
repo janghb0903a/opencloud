@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Manifest → Helm (Bedrock)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --secondary: #64748b;
+      --success: #10b981;
+      --danger: #ef4444;
+      --border: #e2e8f0;
+      --background: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      background-color: var(--card-bg);
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .file-input-wrapper input[type="file"] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .file-input-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--primary);
+      color: white;
+      border-radius: 12px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+
+    .file-input-button:hover {
+      background: var(--primary-hover);
+    }
+
+    .file-input-button i {
+      font-size: 1.1rem;
+    }
+
+    .hint {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-top: 8px;
+      display: block;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 320px;
+      padding: 16px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      resize: vertical;
+      transition: all 0.2s ease;
+      background-color: var(--card-bg);
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .checkbox-label {
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .btn:hover:not(:disabled) {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn i {
+      font-size: 1.1rem;
+    }
+
+    .log-container {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .log-success {
+      color: var(--success) !important;
+    }
+
+    .log-error {
+      color: var(--danger) !important;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 16px;
+      }
+      
+      .card {
+        padding: 20px;
+      }
+      
+      h1 {
+        font-size: 1.875rem;
+      }
+      
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .input-group {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><i class="fas fa-code-branch"></i> Manifest → Helm Chart</h1>
+      <p class="subtitle">Bedrock 기반 Kubernetes 매니페스트를 Helm 차트로 변환하세요</p>
+    </header>
+
+    <main>
+      <div class="card">
+        <div class="form-group">
+          <label class="form-label" for="chartName">차트 이름</label>
+          <div class="input-group">
+            <input type="text" id="chartName" value="myapp" placeholder="예: my-application" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Kubernetes 매니페스트</label>
+          <div class="file-input-wrapper">
+            <div class="file-input-button">
+              <i class="fas fa-file-upload"></i>
+              YAML 파일 선택
+            </div>
+            <input type="file" id="file" accept=".yml,.yaml" />
+          </div>
+          <span class="hint">또는 아래 텍스트 영역에 YAML 내용을 붙여넣으세요</span>
+        </div>
+
+        <textarea id="yaml" placeholder="apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: nginx:latest
+        ports:
+        - containerPort: 80"></textarea>
+      </div>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="ing" />
+        <label class="checkbox-label" for="ing">Ingress 기본 활성화</label>
+      </div>
+
+      <button class="btn" id="go">
+        <i class="fas fa-sync-alt"></i>
+        Helm 차트로 변환하기
+      </button>
+
+      <div class="log-container" id="log">
+        준비 완료! 변환을 시작하세요.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const chartName = document.getElementById('chartName');
+    const yaml = document.getElementById('yaml');
+    const ing = document.getElementById('ing');
+    const file = document.getElementById('file');
+    const log = document.getElementById('log');
+    const goBtn = document.getElementById('go');
+
+    file.onchange = async () => {
+      const f = file.files[0];
+      if (!f) return;
+      try {
+        yaml.value = await f.text();
+        log.textContent = '파일이 성공적으로 로드되었습니다.';
+        log.className = 'log-container log-success';
+      } catch (error) {
+        log.textContent = '파일 로드 중 오류가 발생했습니다.';
+        log.className = 'log-container log-error';
+      }
+    };
+
+    goBtn.onclick = async () => {
+      const name = chartName.value.trim();
+      const text = yaml.value.trim();
+      
+      if (!name || !text) {
+        log.textContent = '차트 이름과 YAML 매니페스트를 입력해주세요.';
+        log.className = 'log-container log-error';
+        return;
+      }
+
+      log.textContent = '변환 중... 잠시만 기다려주세요.';
+      log.className = 'log-container';
+      goBtn.disabled = true;
+
+      try {
+        const res = await fetch("/api/convert", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chart_name: name,
+            manifest_yaml: text,
+            defaults: { ingress: { enabled: ing.checked } }
+          })
+        });
+
+        if (!res.ok) {
+          const e = await res.json().catch(() => ({ error: res.statusText }));
+          throw new Error(e.error || res.statusText);
+        }
+
+        const b = await res.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(b);
+        a.download = `${name}.zip`;
+        a.click();
+        
+        log.textContent = '✅ 변환 완료! ZIP 파일이 다운로드되었습니다.';
+        log.className = 'log-container log-success';
+      } catch (e) {
+        log.textContent = `❌ 오류: ${e.message}`;
+        log.className = 'log-container log-error';
+      } finally {
+        goBtn.disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>

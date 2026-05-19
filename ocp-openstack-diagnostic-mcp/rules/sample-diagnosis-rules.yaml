@@ -1,0 +1,27 @@
+rules:
+  - id: nova_no_valid_host
+    source: nova.scheduler
+    match:
+      message_contains: NoValidHost
+    severity: critical
+  - id: vm_error
+    source: server.status
+    match:
+      value: ERROR
+    severity: critical
+  - id: port_down
+    source: neutron.port.status
+    match:
+      any: [DOWN, ERROR]
+    severity: warning
+  - id: volume_error
+    source: cinder.volume.status
+    match:
+      prefix: error
+    severity: critical
+  - id: powerflex_low_capacity
+    source: cinder.backend.pool
+    match:
+      free_percent_lt: 5
+    severity: critical
+

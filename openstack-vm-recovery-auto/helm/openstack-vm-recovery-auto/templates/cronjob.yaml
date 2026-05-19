@@ -1,0 +1,105 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "openstack-vm-recovery.fullname" . }}
+  labels:
+    {{- include "openstack-vm-recovery.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "openstack-vm-recovery.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: recovery
+        spec:
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          restartPolicy: Never
+          containers:
+            - name: recovery
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["python", "/app/openstack_vm_recovery.py", "run"]
+              securityContext:
+                {{- toYaml .Values.containerSecurityContext | nindent 16 }}
+              env:
+                - name: DB_PATH
+                  value: /data/openstack_vm_recovery.db
+                - name: VM_TARGETS_FILE
+                  value: /config/targets.json
+                - name: FAILURE_THRESHOLD
+                  value: {{ .Values.failureThreshold | quote }}
+                - name: PING_COUNT
+                  value: {{ .Values.pingCount | quote }}
+                - name: PING_TIMEOUT_SEC
+                  value: {{ .Values.pingTimeoutSec | quote }}
+                - name: OPENSTACK_TIMEOUT_SEC
+                  value: {{ .Values.openstackTimeoutSec | quote }}
+                - name: SLEEP_BETWEEN_TARGETS_SEC
+                  value: {{ .Values.sleepBetweenTargetsSec | quote }}
+                - name: VM_DISCOVERY_ENABLED
+                  value: {{ .Values.discovery.enabled | quote }}
+                - name: DISCOVERY_NETWORK_PREFIXES
+                  value: {{ join "," .Values.discovery.networkNamePrefixes | quote }}
+                - name: DISCOVERY_IP_PREFIXES
+                  value: {{ join "," .Values.discovery.fallbackIpPrefixes | quote }}
+                - name: DISCOVERY_SERVER_LIST_ARGS
+                  value: {{ join " " .Values.discovery.serverListArgs | quote }}
+                - name: OS_AUTH_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "openstack-vm-recovery.secretName" . }}
+                      key: OS_AUTH_URL
+                - name: OS_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "openstack-vm-recovery.secretName" . }}
+                      key: OS_USERNAME
+                - name: OS_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "openstack-vm-recovery.secretName" . }}
+                      key: OS_PASSWORD
+                - name: OS_PROJECT_NAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "openstack-vm-recovery.secretName" . }}
+                      key: OS_PROJECT_NAME
+                - name: OS_USER_DOMAIN_NAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "openstack-vm-recovery.secretName" . }}
+                      key: OS_USER_DOMAIN_NAME
+                - name: OS_PROJECT_DOMAIN_NAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "openstack-vm-recovery.secretName" . }}
+                      key: OS_PROJECT_DOMAIN_NAME
+                - name: OS_IDENTITY_API_VERSION
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "openstack-vm-recovery.secretName" . }}
+                      key: OS_IDENTITY_API_VERSION
+                - name: OS_AUTH_TYPE
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "openstack-vm-recovery.secretName" . }}
+                      key: OS_AUTH_TYPE
+              volumeMounts:
+                - name: config
+                  mountPath: /config
+                  readOnly: true
+                - name: data
+                  mountPath: /data
+          volumes:
+            - name: config
+              configMap:
+                name: {{ include "openstack-vm-recovery.fullname" . }}-config
+            - name: data
+              persistentVolumeClaim:
+                claimName: {{ include "openstack-vm-recovery.fullname" . }}-data

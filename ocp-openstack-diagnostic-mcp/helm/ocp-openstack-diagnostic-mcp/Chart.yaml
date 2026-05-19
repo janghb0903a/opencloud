@@ -1,0 +1,7 @@
+apiVersion: v2
+name: ocp-openstack-diagnostic-mcp
+description: Read-only OpenStack diagnostic MCP server
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+

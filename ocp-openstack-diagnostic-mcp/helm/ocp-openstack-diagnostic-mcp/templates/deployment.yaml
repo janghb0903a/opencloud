@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ocp-openstack-diagnostic-mcp.fullname" . }}
+  labels:
+    {{- include "ocp-openstack-diagnostic-mcp.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ocp-openstack-diagnostic-mcp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "ocp-openstack-diagnostic-mcp.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "ocp-openstack-diagnostic-mcp.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      containers:
+        - name: mcp
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - "--transport"
+            - "{{ .Values.transport }}"
+            - "--host"
+            - "{{ .Values.http.host }}"
+            - "--port"
+            - "{{ .Values.http.port }}"
+            - "--path"
+            - "{{ .Values.http.path }}"
+            - "--log-level"
+            - "{{ .Values.logLevel }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.http.port }}
+              protocol: TCP
+          env:
+            - name: OCP_OPENSTACK_DIAG_CONFIG_DIR
+              value: /app/config
+            - name: OS_CLIENT_CONFIG_FILE
+              value: {{ .Values.cloudsSecret.mountPath }}/clouds.yaml
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+            {{- if .Values.cloudsSecret.enabled }}
+            - name: clouds
+              mountPath: {{ .Values.cloudsSecret.mountPath }}
+              readOnly: true
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "ocp-openstack-diagnostic-mcp.fullname" . }}-config
+        {{- if .Values.cloudsSecret.enabled }}
+        - name: clouds
+          secret:
+            secretName: {{ required "cloudsSecret.existingSecret is required when cloudsSecret.enabled=true" .Values.cloudsSecret.existingSecret }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+

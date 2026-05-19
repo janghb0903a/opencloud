@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  color: #ecf2ff;
+  font-family: "Segoe UI Variable", "Pretendard", "Noto Sans KR", sans-serif;
+  background:
+    radial-gradient(1200px 620px at 88% -5%, rgba(34, 211, 238, 0.2), transparent 55%),
+    radial-gradient(900px 460px at -8% 104%, rgba(34, 197, 94, 0.16), transparent 50%),
+    linear-gradient(160deg, #060a13 0%, #090f1d 48%, #0a1425 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@layer components {
+  .glass-card {
+    @apply rounded-2xl border border-white/10 bg-white/[0.04] shadow-[0_10px_40px_rgba(0,0,0,0.35)] backdrop-blur;
+  }
+
+  .pill {
+    @apply inline-flex items-center rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-xs font-medium text-slate-200;
+  }
+
+  .field {
+    @apply w-full rounded-xl border border-white/15 bg-black/25 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-400/20;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10;
+  }
+}

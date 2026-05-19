@@ -1,0 +1,154 @@
+replicaCount: 1
+
+image:
+  repository: ocp-k8s-diagnostic-mcp
+  tag: dev
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: ""
+
+rbac:
+  create: true
+
+podAnnotations: {}
+podLabels: {}
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+transport: http
+logLevel: INFO
+http:
+  host: 0.0.0.0
+  port: 8080
+  path: /mcp
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: ocp-k8s-diagnostic-mcp.example.internal
+      paths:
+        - path: /mcp
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+config:
+  clustersYaml: |
+    clusters:
+      - cluster_id: mgmt
+        kubeconfig_ref: env:KUBECONFIG_MGMT
+        prometheus_ref: mgmt
+      - cluster_id: test-app-01
+        kubeconfig_ref: env:KUBECONFIG_TEST_APP_01
+        prometheus_ref: test-app-01
+      - cluster_id: dev-app-01
+        kubeconfig_ref: env:KUBECONFIG_DEV_APP_01
+        prometheus_ref: dev-app-01
+      - cluster_id: test-genai-01
+        kubeconfig_ref: env:KUBECONFIG_TEST_GENAI_01
+        prometheus_ref: test-genai-01
+      - cluster_id: test-genai-02
+        kubeconfig_ref: env:KUBECONFIG_TEST_GENAI_02
+        prometheus_ref: test-genai-02
+      - cluster_id: test-mgmt-01
+        kubeconfig_ref: env:KUBECONFIG_TEST_MGMT_01
+        prometheus_ref: test-mgmt-01
+      - cluster_id: test-mgmt-02
+        kubeconfig_ref: env:KUBECONFIG_TEST_MGMT_02
+        prometheus_ref: test-mgmt-02
+        type: openstack-helm
+        tags: ["openstack-helm"]
+  policiesYaml: |
+    deny_verbs:
+      - create
+      - update
+      - patch
+      - delete
+      - deletecollection
+    deny_functions:
+      - exec
+      - debug
+      - port-forward
+      - cordon
+      - drain
+      - scale
+      - apply
+      - rollout restart
+      - kubectl
+      - helm
+      - bash
+      - ssh
+    limits:
+      max_log_tail_lines: 1000
+      max_lookback_seconds: 86400
+      max_query_timeout_seconds: 30
+  prometheusYaml: |
+    prometheus:
+      mgmt:
+        url: http://prometheus.cattle-monitoring-system.svc:9090
+      test-app-01:
+        url: http://prometheus.cattle-monitoring-system.svc:9090
+      dev-app-01:
+        url: http://prometheus.cattle-monitoring-system.svc:9090
+      test-genai-01:
+        url: http://prometheus.cattle-monitoring-system.svc:9090
+      test-genai-02:
+        url: http://prometheus.cattle-monitoring-system.svc:9090
+      test-mgmt-01:
+        url: http://prometheus.cattle-monitoring-system.svc:9090
+      test-mgmt-02:
+        url: http://prometheus.cattle-monitoring-system.svc:9090
+  hubYaml: |
+    hub:
+      endpoints: []
+  rancherYaml: |
+    rancher:
+      enabled: false
+      url: https://rancher.example.internal
+      verify_tls: true
+      timeout_seconds: 10
+      user_token_ref: env:RANCHER_BEARER_TOKEN
+
+secretEnv:
+  # HUB_INTERNAL_TOKEN: ""
+  # RANCHER_BEARER_TOKEN: ""
+  # KUBECONFIG_MGMT: "/kubeconfigs/mgmt"
+  {}
+
+kubeconfigSecret:
+  enabled: false
+  existingSecret: ""
+  mountPath: /kubeconfigs
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

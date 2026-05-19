@@ -1,0 +1,16 @@
+prometheus:
+  mgmt:
+    url: http://prometheus.cattle-monitoring-system.svc:9090
+  test-app-01:
+    url: http://prometheus.cattle-monitoring-system.svc:9090
+  dev-app-01:
+    url: http://prometheus.cattle-monitoring-system.svc:9090
+  test-genai-01:
+    url: http://prometheus.cattle-monitoring-system.svc:9090
+  test-genai-02:
+    url: http://prometheus.cattle-monitoring-system.svc:9090
+  test-mgmt-01:
+    url: http://prometheus.cattle-monitoring-system.svc:9090
+  test-mgmt-02:
+    url: http://prometheus.cattle-monitoring-system.svc:9090
+

@@ -1,0 +1,127 @@
+replicaCount: 1
+
+image:
+  repository: ocp-openstack-diagnostic-mcp
+  tag: dev
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+transport: http
+logLevel: INFO
+
+http:
+  host: 0.0.0.0
+  port: 8080
+  path: /mcp
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: ocp-openstack-diagnostic-mcp.example.internal
+      paths:
+        - path: /mcp
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+config:
+  cloudsYaml: |
+    clouds:
+      - cloud_id: test-mgmt-02
+        cloud: test-mgmt-02
+        region_name: RegionOne
+        interface: internal
+        clouds_yaml_ref: file:/openstack/clouds.yaml
+        storage_backend: PowerFlex
+        ceph: false
+        linked_k8s:
+          mcp_server: ocp-k8s-diagnostic-mcp
+          cluster_id: test-mgmt-02
+          namespace: openstack-helm
+  policiesYaml: |
+    deny_operations:
+      - create
+      - delete
+      - reboot
+      - rebuild
+      - resize
+      - migrate
+      - evacuate
+      - attach
+      - detach
+      - reset-state
+      - set
+      - update
+      - enable
+      - disable
+      - upload
+    limits:
+      max_results: 500
+      timeout_seconds: 20
+      stdout_limit_bytes: 262144
+      retries: 1
+  componentK8sMappingYaml: |
+    components:
+      nova:
+        namespace: openstack-helm
+        label_selector: application=nova
+      neutron:
+        namespace: openstack-helm
+        label_selector: application=neutron
+      cinder:
+        namespace: openstack-helm
+        label_selector: application=cinder
+  cliAllowlistYaml: |
+    commands:
+      - argv_prefix: ["openstack", "server", "show"]
+      - argv_prefix: ["openstack", "server", "event", "list"]
+      - argv_prefix: ["openstack", "hypervisor", "list"]
+      - argv_prefix: ["openstack", "compute", "service", "list"]
+      - argv_prefix: ["openstack", "network", "agent", "list"]
+      - argv_prefix: ["openstack", "volume", "show"]
+      - argv_prefix: ["openstack", "volume", "service", "list"]
+
+cloudsSecret:
+  enabled: true
+  existingSecret: ""
+  mountPath: /openstack
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+

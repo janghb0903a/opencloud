@@ -1,0 +1,16 @@
+# MCP cloud registry. This is not raw OpenStack clouds.yaml.
+# Real OpenStack credentials stay in the file referenced by clouds_yaml_ref.
+clouds:
+  - cloud_id: test-mgmt-02
+    cloud: test-mgmt-02
+    region_name: RegionOne
+    interface: internal
+    clouds_yaml_ref: env:OS_CLIENT_CONFIG_FILE
+    storage_backend: PowerFlex
+    ceph: false
+    linked_k8s:
+      mcp_server: ocp-k8s-diagnostic-mcp
+      cluster_id: test-mgmt-02
+      namespace: openstack-helm
+    rancher_cluster_name: test-mgmt-02
+

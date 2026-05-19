@@ -1,0 +1,15 @@
+services:
+  openstack-migration-web:
+    build: .
+    image: openstack-migration-web:0.1.0
+    container_name: os-migration-web
+    environment:
+      - PORT=${PORT:-8080}
+    ports:
+      - "${PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped

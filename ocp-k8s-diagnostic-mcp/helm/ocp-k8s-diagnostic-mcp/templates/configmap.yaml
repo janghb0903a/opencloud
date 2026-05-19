@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ocp-k8s-diagnostic-mcp.fullname" . }}-config
+  labels:
+    {{- include "ocp-k8s-diagnostic-mcp.labels" . | nindent 4 }}
+data:
+  clusters.yaml: |
+{{ .Values.config.clustersYaml | indent 4 }}
+  policies.yaml: |
+{{ .Values.config.policiesYaml | indent 4 }}
+  prometheus.yaml: |
+{{ .Values.config.prometheusYaml | indent 4 }}
+  hub.yaml: |
+{{ .Values.config.hubYaml | indent 4 }}
+  rancher.yaml: |
+{{ .Values.config.rancherYaml | indent 4 }}

@@ -1,0 +1,24 @@
+deny_verbs:
+  - create
+  - update
+  - patch
+  - delete
+  - deletecollection
+deny_functions:
+  - exec
+  - debug
+  - port-forward
+  - cordon
+  - drain
+  - scale
+  - apply
+  - rollout restart
+  - kubectl
+  - helm
+  - bash
+  - ssh
+limits:
+  max_log_tail_lines: 1000
+  max_lookback_seconds: 86400
+  max_query_timeout_seconds: 30
+

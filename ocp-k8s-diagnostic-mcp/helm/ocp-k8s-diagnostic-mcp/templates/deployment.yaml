@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ocp-k8s-diagnostic-mcp.fullname" . }}
+  labels:
+    {{- include "ocp-k8s-diagnostic-mcp.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ocp-k8s-diagnostic-mcp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "ocp-k8s-diagnostic-mcp.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "ocp-k8s-diagnostic-mcp.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      containers:
+        - name: mcp
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - "--transport"
+            - "{{ .Values.transport }}"
+            - "--host"
+            - "{{ .Values.http.host }}"
+            - "--port"
+            - "{{ .Values.http.port }}"
+            - "--path"
+            - "{{ .Values.http.path }}"
+            - "--log-level"
+            - "{{ .Values.logLevel }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.http.port }}
+              protocol: TCP
+          env:
+            - name: OCP_DIAG_CONFIG_DIR
+              value: /app/config
+          {{- if .Values.secretEnv }}
+          envFrom:
+            - secretRef:
+                name: {{ include "ocp-k8s-diagnostic-mcp.fullname" . }}-env
+          {{- end }}
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+            {{- if .Values.kubeconfigSecret.enabled }}
+            - name: kubeconfigs
+              mountPath: {{ .Values.kubeconfigSecret.mountPath }}
+              readOnly: true
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "ocp-k8s-diagnostic-mcp.fullname" . }}-config
+        {{- if .Values.kubeconfigSecret.enabled }}
+        - name: kubeconfigs
+          secret:
+            secretName: {{ required "kubeconfigSecret.existingSecret is required when kubeconfigSecret.enabled=true" .Values.kubeconfigSecret.existingSecret }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

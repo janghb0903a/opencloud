@@ -1,0 +1,37 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "grafana-ai-assistant.fullname" . }}-backend
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "grafana-ai-assistant.fullname" . }}-backend
+  template:
+    metadata:
+      labels:
+        app: {{ include "grafana-ai-assistant.fullname" . }}-backend
+    spec:
+      containers:
+        - name: backend
+          image: "{{ .Values.image.backend.repository }}:{{ .Values.image.backend.tag }}"
+          imagePullPolicy: {{ .Values.image.backend.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.backend.targetPort }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "grafana-ai-assistant.fullname" . }}-config
+            - secretRef:
+                name: {{ include "grafana-ai-assistant.fullname" . }}-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "grafana-ai-assistant.fullname" . }}-backend
+spec:
+  type: {{ .Values.service.backend.type }}
+  selector:
+    app: {{ include "grafana-ai-assistant.fullname" . }}-backend
+  ports:
+    - port: {{ .Values.service.backend.port }}
+      targetPort: {{ .Values.service.backend.targetPort }}

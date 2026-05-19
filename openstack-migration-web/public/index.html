@@ -1,0 +1,73 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenStack Migration Flow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="bg-orb bg-orb-a"></div>
+  <div class="bg-orb bg-orb-b"></div>
+
+  <main class="layout">
+    <header class="hero card reveal">
+      <p class="eyebrow">OpenStack Migration Application</p>
+      <h1>볼륨 복제 기반 마이그레이션 워크플로우</h1>
+      <p class="muted">구 OpenStack -> PowerFlex source-id 추출/재생성 -> 신 OpenStack VM 생성 흐름을 단계별 카드로 진행합니다.</p>
+      <div class="stepbar" id="stepBar"></div>
+    </header>
+
+    <section class="grid">
+      <article class="card reveal">
+        <h2>1) 인스턴스 선택 및 -rep 복제</h2>
+        <label>Hostname 검색</label>
+        <div class="row">
+          <input id="hostnameQuery" placeholder="예: test-os-data" />
+          <button id="searchBtn" class="btn">검색</button>
+        </div>
+        <label>검색 결과</label>
+        <select id="hostnameSelect"></select>
+        <label>붙어있는 볼륨</label>
+        <div id="volumeList" class="checklist"></div>
+      </article>
+
+      <article class="card reveal">
+        <h2>2) 인증 정보</h2>
+        <p class="muted">실행 시 OPENRC/토큰 입력 영역과 매핑 예정 (현재는 UI/플로우 템플릿)</p>
+        <label>구 OpenStack Auth</label>
+        <textarea id="oldAuth" placeholder="OS_AUTH_URL=...\nOS_USERNAME=...\n..."></textarea>
+        <label>신 OpenStack Auth</label>
+        <textarea id="newAuth" placeholder="OS_AUTH_URL=...\nOS_USERNAME=...\n..."></textarea>
+      </article>
+
+      <article class="card reveal">
+        <h2>3) 네트워크 포트 입력 (기본 1개)</h2>
+        <div id="portsContainer"></div>
+        <button id="addPortBtn" class="btn secondary">+ 포트 추가</button>
+      </article>
+
+      <article class="card reveal">
+        <h2>4) 단계별 명령 미리보기</h2>
+        <p class="muted">실제 연결 전, 어떤 CLI가 실행될지 먼저 검증할 수 있습니다.</p>
+        <button id="generateBtn" class="btn">워크플로우 생성</button>
+        <div id="planContainer"></div>
+      </article>
+    </section>
+  </main>
+
+  <template id="portRowTemplate">
+    <div class="port-row">
+      <input class="network" placeholder="Network ID" />
+      <input class="subnet" placeholder="Subnet ID" />
+      <input class="ip" placeholder="IP (선택)" />
+      <button class="remove-port">삭제</button>
+    </div>
+  </template>
+
+  <script src="/app.js"></script>
+</body>
+</html>

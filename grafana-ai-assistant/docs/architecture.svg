@@ -1,0 +1,65 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="740" viewBox="0 0 1300 740">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#08121f"/>
+      <stop offset="100%" stop-color="#0d1f32"/>
+    </linearGradient>
+    <style>
+      .title { font: 700 30px 'Segoe UI', sans-serif; fill: #e8f0fa; }
+      .label { font: 600 18px 'Segoe UI', sans-serif; fill: #d3e3f5; }
+      .text { font: 500 14px 'Segoe UI', sans-serif; fill: #a8bfd8; }
+      .line { stroke: #31d2c0; stroke-width: 2.5; marker-end: url(#arrow); fill: none; }
+      .box { fill: #11243a; stroke: #2f4967; stroke-width: 2; rx: 14; }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#31d2c0"/>
+    </marker>
+  </defs>
+
+  <rect width="1300" height="740" fill="url(#bg)" />
+  <text x="50" y="58" class="title">Grafana Dashboard AI Assistant Architecture</text>
+
+  <rect class="box" x="55" y="120" width="280" height="150" />
+  <text x="80" y="160" class="label">User Browser (Next.js)</text>
+  <text x="80" y="192" class="text">- Prompt input / chat</text>
+  <text x="80" y="218" class="text">- Metric search</text>
+  <text x="80" y="244" class="text">- Monaco live JSON preview</text>
+
+  <rect class="box" x="430" y="100" width="330" height="200" />
+  <text x="455" y="145" class="label">Backend API (FastAPI)</text>
+  <text x="455" y="176" class="text">1) /metadata cache at startup</text>
+  <text x="455" y="202" class="text">2) Context construction from metrics</text>
+  <text x="455" y="228" class="text">3) /dashboard/generate or /stream</text>
+  <text x="455" y="254" class="text">4) JSON response for Grafana</text>
+
+  <rect class="box" x="865" y="90" width="365" height="210" />
+  <text x="895" y="135" class="label">AI GPU Server (NodePort)</text>
+  <text x="895" y="168" class="text">GPT-OSS-120B (OpenAI-compatible)</text>
+  <text x="895" y="194" class="text">POST /v1/chat/completions</text>
+  <text x="895" y="220" class="text">Stream or standard completion</text>
+  <text x="895" y="246" class="text">Returns Grafana dashboard JSON</text>
+
+  <rect class="box" x="865" y="380" width="365" height="180" />
+  <text x="895" y="425" class="label">Rancher Monitoring</text>
+  <text x="895" y="457" class="text">Prometheus /api/v1/metadata</text>
+  <text x="895" y="483" class="text">Metric names + type + help</text>
+  <text x="895" y="509" class="text">Access via ServiceAccount token</text>
+
+  <rect class="box" x="430" y="380" width="330" height="180" />
+  <text x="455" y="425" class="label">Kubernetes / Helm</text>
+  <text x="455" y="457" class="text">ConfigMap: endpoints/model</text>
+  <text x="455" y="483" class="text">Secret: PROMETHEUS_TOKEN</text>
+  <text x="455" y="509" class="text">Frontend + Backend deployments</text>
+
+  <path class="line" d="M335 194 L430 194" />
+  <path class="line" d="M760 190 L865 190" />
+  <path class="line" d="M865 430 L760 430" />
+  <path class="line" d="M760 460 L865 460" />
+  <path class="line" d="M595 300 L595 380" />
+
+  <text x="355" y="178" class="text">HTTP API</text>
+  <text x="785" y="176" class="text">AI call</text>
+  <text x="786" y="418" class="text">metadata fetch</text>
+  <text x="780" y="452" class="text">token auth</text>
+  <text x="605" y="350" class="text">env injection</text>
+</svg>

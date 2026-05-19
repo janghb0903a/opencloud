@@ -1,0 +1,31 @@
+clusters:
+  - cluster_id: mgmt
+    kubeconfig_ref: env:KUBECONFIG_MGMT
+    prometheus_ref: mgmt
+    rancher_cluster_name: mgmt
+  - cluster_id: test-app-01
+    kubeconfig_ref: env:KUBECONFIG_TEST_APP_01
+    prometheus_ref: test-app-01
+    rancher_cluster_name: test-app-01
+  - cluster_id: dev-app-01
+    kubeconfig_ref: env:KUBECONFIG_DEV_APP_01
+    prometheus_ref: dev-app-01
+    rancher_cluster_name: dev-app-01
+  - cluster_id: test-genai-01
+    kubeconfig_ref: env:KUBECONFIG_TEST_GENAI_01
+    prometheus_ref: test-genai-01
+    rancher_cluster_name: test-genai-01
+  - cluster_id: test-genai-02
+    kubeconfig_ref: env:KUBECONFIG_TEST_GENAI_02
+    prometheus_ref: test-genai-02
+    rancher_cluster_name: test-genai-02
+  - cluster_id: test-mgmt-01
+    kubeconfig_ref: env:KUBECONFIG_TEST_MGMT_01
+    prometheus_ref: test-mgmt-01
+    rancher_cluster_name: test-mgmt-01
+  - cluster_id: test-mgmt-02
+    kubeconfig_ref: env:KUBECONFIG_TEST_MGMT_02
+    prometheus_ref: test-mgmt-02
+    rancher_cluster_name: test-mgmt-02
+    type: openstack-helm
+    tags: ["openstack-helm"]

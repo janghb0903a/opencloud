@@ -1,0 +1,76 @@
+image:
+  repository: registry.example.com/opencloud/openstack-vm-recovery-auto
+  tag: "0.4.0"
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+schedule: "*/10 * * * *"
+failureThreshold: 3
+pingCount: 2
+pingTimeoutSec: 3
+openstackTimeoutSec: 30
+sleepBetweenTargetsSec: 1
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 9088
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: vm-recovery.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+web:
+  replicaCount: 1
+
+podSecurityContext:
+  fsGroup: 1001
+  fsGroupChangePolicy: OnRootMismatch
+
+containerSecurityContext:
+  runAsUser: 1001
+  runAsGroup: 0
+  runAsNonRoot: true
+
+persistence:
+  enabled: true
+  accessModes:
+    - ReadWriteOnce
+  size: 2Gi
+  storageClassName: ""
+
+discovery:
+  enabled: true
+  networkNamePrefixes:
+    - ap
+    - db
+  fallbackIpPrefixes:
+    - 16.120.
+    - 16.120.120.
+    - 16.120.121.
+  serverListArgs: []
+
+targets: []
+
+openstack:
+  secret:
+    create: true
+    name: ""
+  auth:
+    OS_AUTH_URL: "https://keystone.example.com:5000/v3"
+    OS_USERNAME: "monitoring"
+    OS_PASSWORD: "change-me"
+    OS_PROJECT_NAME: "admin"
+    OS_USER_DOMAIN_NAME: "Default"
+    OS_PROJECT_DOMAIN_NAME: "Default"
+    OS_IDENTITY_API_VERSION: "3"
+    OS_AUTH_TYPE: "password"

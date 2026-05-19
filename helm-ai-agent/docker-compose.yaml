@@ -1,0 +1,27 @@
+version: "3.9"
+services:
+  api:
+    build: ./api
+    image: local/ai-helmify-api:latest
+    environment:
+      - LLM_BACKEND=bedrock
+      - AWS_REGION=ap-northeast-2
+      - BEDROCK_MODEL_ID=anthropic.claude-3-5-sonnet-20240620-v1:0
+      # IAM Role을 쓰면 아래 키 불필요. 키 쓰려면 주석 해제:
+      # - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      # - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      # - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+    networks: [ net ]
+    expose: [ "8000" ]
+
+  web:
+    build: ./web
+    image: local/ai-helmify-web:latest
+    networks: [ net ]
+    depends_on: { api: { condition: service_started } }
+    ports:
+      - "0.0.0.0:9090:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro,z
+
+networks: { net: {} }

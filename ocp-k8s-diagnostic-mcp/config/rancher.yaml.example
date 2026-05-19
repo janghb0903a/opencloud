@@ -1,0 +1,11 @@
+# Rancher authorization config.
+# Rancher URL is server-side fixed config. Users should not pass this per request.
+# For stdio/local tests, set RANCHER_BEARER_TOKEN to "<access-key>:<secret-key>".
+# For future HTTP transport, pass the same value as the Authorization: Bearer header.
+rancher:
+  enabled: false
+  url: https://rancher.example.internal
+  verify_tls: true
+  timeout_seconds: 10
+  user_token_ref: env:RANCHER_BEARER_TOKEN
+

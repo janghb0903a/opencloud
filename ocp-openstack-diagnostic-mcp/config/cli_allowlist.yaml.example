@@ -1,0 +1,9 @@
+commands:
+  - argv_prefix: ["openstack", "server", "show"]
+  - argv_prefix: ["openstack", "server", "event", "list"]
+  - argv_prefix: ["openstack", "hypervisor", "list"]
+  - argv_prefix: ["openstack", "compute", "service", "list"]
+  - argv_prefix: ["openstack", "network", "agent", "list"]
+  - argv_prefix: ["openstack", "volume", "show"]
+  - argv_prefix: ["openstack", "volume", "service", "list"]
+

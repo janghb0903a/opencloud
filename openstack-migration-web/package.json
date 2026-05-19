@@ -1,0 +1,12 @@
+﻿{
+  "name": "openstack-migration-web",
+  "version": "0.1.0",
+  "description": "Step-by-step OpenStack migration workflow web app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

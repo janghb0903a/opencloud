@@ -1,0 +1,32 @@
+components:
+  nova:
+    namespace: openstack-helm
+    label_selector: application=nova
+    recommended_tools:
+      - k8s.get_pods
+      - diagnose.pod
+  neutron:
+    namespace: openstack-helm
+    label_selector: application=neutron
+    recommended_tools:
+      - k8s.get_pods
+      - diagnose.pod
+  cinder:
+    namespace: openstack-helm
+    label_selector: application=cinder
+    recommended_tools:
+      - k8s.get_pods
+      - diagnose.pod
+  glance:
+    namespace: openstack-helm
+    label_selector: application=glance
+    recommended_tools:
+      - k8s.get_pods
+      - diagnose.pod
+  keystone:
+    namespace: openstack-helm
+    label_selector: application=keystone
+    recommended_tools:
+      - k8s.get_pods
+      - diagnose.pod
+
